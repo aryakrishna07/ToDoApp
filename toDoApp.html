@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .done {
+            text-decoration: line-through;
+            background-color: azure;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-lignt">
+        <div class="container mt-5">
+            <div class="card card-body">
+                <h5 class="card-title text-center">To-Do List</h5>
+                <p id="currentDate" class="text-center mb-4"></p> <!-- Date display element -->
+                <div class="input-group mb-3">
+                    <input type="text" id="todoInput" class="form-control" placeholder="Enter a task"
+                        onkeypress="handleKeyPress(event)">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="button" onclick="addTodo()">Add</button>
+                    </div>
+                </div>
+                <ul id="todoList" class="list-group"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let todoCounter = 1; // Counter for numbering to-do list items
+
+        // Function to get the current date in the format "Day, Month Date, Year"
+        function getCurrentDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            return today.toLocaleDateString('en-US', options);
+        }
+
+        // Function to update the current date display
+        function updateCurrentDate() {
+            document.getElementById("currentDate").textContent = getCurrentDate();
+        }
+
+        // Call updateCurrentDate() to display the current date when the page loads
+        updateCurrentDate();
+
+        // Load tasks from local storage when the page loads
+        window.onload = function () {
+            var savedTodos = localStorage.getItem("todos");
+            if (savedTodos) {
+                document.getElementById("todoList").innerHTML = savedTodos;
+                todoCounter = document.querySelectorAll("#todoList .list-group-item").length + 1; // Update todoCounter
+                updateNumbering();
+            }
+        };
+
+        function addTodo() {
+            var input = document.getElementById("todoInput");
+            var todoText = input.value.trim();
+            if (todoText !== "") {
+                var listItem = document.createElement("li");
+                listItem.className = "list-group-item";
+                listItem.innerHTML = `
+                    <span id="todoItem${todoCounter}">${todoCounter}. ${todoText}</span>
+                        <button type="button" class="float-right btn btn-success btn-sm ml-2" onclick="toggleDone(${todoCounter})">Done</button>
+                        <button type="button" class="float-right btn btn-warning btn-sm ml-2" onclick="editTodo(${todoCounter})">Edit</button>
+                        <button type="button" class="float-right btn btn-danger btn-sm ml-2" aria-label="Close" onclick="removeTodo(${todoCounter})">Delete</button>
+                `;
+                document.getElementById("todoList").appendChild(listItem);
+                input.value = "";
+                updateNumbering(); // Update numbering after adding a task
+                todoCounter++; // Increment the counter
+                saveToLocalStorage();
+            }
+        }
+
+        function removeTodo(todoIndex) {
+            var listItem = document.getElementById(`todoItem${todoIndex}`).parentElement;
+            listItem.remove();
+            updateNumbering(); // Update numbering after removing a task
+            saveToLocalStorage();
+        }
+
+        function editTodo(todoIndex) {
+            var span = document.getElementById(`todoItem${todoIndex}`);
+            var newText = prompt("Enter new text for the task:", span.textContent.slice(span.textContent.indexOf(". ") + 2));
+            if (newText !== null) {
+                span.textContent = `${todoIndex}. ${newText}`;
+                saveToLocalStorage();
+            }
+        }
+
+        function toggleDone(todoIndex) {
+            var span = document.getElementById(`todoItem${todoIndex}`);
+            span.classList.toggle("done");
+            var doneButton = span.nextElementSibling;
+            if (span.classList.contains("done")) {
+                doneButton.textContent = "Undo";
+                doneButton.classList = "float-right btn btn-secondary btn-sm ml-2"
+            } else {
+                doneButton.textContent = "Done";
+                doneButton.classList = "float-right btn btn-success btn-sm ml-2"
+            }
+            saveToLocalStorage();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                addTodo();
+            }
+        }
+
+        // Function to update numbering of tasks
+        function updateNumbering() {
+            var items = document.querySelectorAll("#todoList .list-group-item span");
+            items.forEach(function (item, index) {
+                item.textContent = (index + 1) + ". " + item.textContent.slice(item.textContent.indexOf(". ") + 2);
+            });
+        }
+
+        // Function to save the to-do list to local storage
+        function saveToLocalStorage() {
+            var todoListHtml = document.getElementById("todoList").innerHTML;
+            localStorage.setItem("todos", todoListHtml);
+        }
+
+        Sortable.create(demo2, {
+            group: 'todoList',
+            handle: '.list-group-item'
+        });
+
+    </script>
+</body>
+
+</html>
